@@ -328,7 +328,7 @@ class V3Interpreter extends WasmStack {
 			THROW => {
 				var index = codeptr.read_uleb31();
 				var tag = frame.func.instance.tags[index];
-				var ex = Exception.new(tag, popN(tag.decl.fields.length), null);
+				var ex = Exception.new(tag, popN(tag.decl.fields), null);
 				throw(ex);
 			}
 			RETHROW => {
@@ -1136,24 +1136,22 @@ class V3Interpreter extends WasmStack {
 				// var cont = Continuation.new(cont_decl, V3Interpreter.new());
 				// cont.stack.reset(func);
 				// push(Value.Ref(cont));
+
 				Runtime.CONT_NEW(this, frame.func.instance, codeptr.read_uleb32(), V3Interpreter.new);
 			}
 			CONT_BIND => {
-				var in_cont = ContDecl.!(frame.func.instance.heaptypes[codeptr.read_uleb32()]);
-				var out_cont = ContDecl.!(frame.func.instance.heaptypes[codeptr.read_uleb32()]);
-				var n_binds = in_cont.sig.params.length - out_cont.sig.params.length;
+				// var in_cont = ContDecl.!(frame.func.instance.heaptypes[codeptr.read_uleb32()]);
+				// var out_cont = ContDecl.!(frame.func.instance.heaptypes[codeptr.read_uleb32()]);
+				// var n_binds = in_cont.sig.params.length - out_cont.sig.params.length;
+				// var cont = Continuation.!(Value.Ref.!(pop()).val);
+				// if (cont == null) trap(TrapReason.NULL_DEREF);
+				// if (cont.used) trap(TrapReason.USED_CONTINUATION);
+				// var new_cont = Continuation.new(out_cont, cont.stack);
+				// new_cont.stack.bind(values.peekn(n_binds));
+				// push(Value.Ref(cont));
+				// values.top -= n_binds;
 
-				var cont = Continuation.!(Value.Ref.!(pop()).val);
-				if (cont == null) trap(TrapReason.NULL_DEREF);
-				// continuation can only be resumed/bound once
-				if (cont.used) trap(TrapReason.USED_CONTINUATION);
-
-				var new_cont = Continuation.new(cont.cont, cont.stack);
-
-				new_cont.stack.bind(values.peekn(n_binds));
-				push(Value.Ref(cont));
-
-				values.top -= n_binds;
+				Runtime.CONT_BIND(this, frame.func.instance, codeptr.read_uleb32(), codeptr.read_uleb32());
 			}
 			RESUME => {
 				var cont_idx = codeptr.read_uleb32();
@@ -1606,10 +1604,10 @@ class V3Interpreter extends WasmStack {
 		if (memory.decl.indexType == ValueType.I32) pushu(u32.view(val));
 		else pushw(val);
 	}
-	def popN(count: int) -> Array<Value> {
-		var result = Array<Value>.new(count);
-		var sp = values.top - count;
-		for (i < count) result[i] = values.elems[sp + i];
+	def popN(t: Range<ValueType>) -> Array<Value> {
+		var result = Array<Value>.new(t.length);
+		var sp = values.top - t.length;
+		for (i < t.length) result[i] = values.elems[sp + i];
 		values.top = sp;
 		return result;
 	}

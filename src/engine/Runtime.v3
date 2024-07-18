@@ -304,6 +304,20 @@ component Runtime {
 		stack.push(Value.Ref(cont));
 		return null;
 	}
+	def CONT_BIND(stack: WasmStack, instance: Instance, in_cont_index: u32, out_cont_index: u32) -> Throwable {
+		var in_cont = ContDecl.!(instance.heaptypes[in_cont_index]);
+		var out_cont = ContDecl.!(instance.heaptypes[out_cont_index]);
+		var n_binds = in_cont.sig.params.length - out_cont.sig.params.length;
+
+		var cont_ref = stack.popV(ValueType.Ref(true, HeapType.Cont(in_cont)));
+		var cont = Continuation.!(Value.Ref.!(cont_ref).val);
+		if (cont == null) return stack.trap(TrapReason.NULL_DEREF);
+		if (cont.used) return stack.trap(TrapReason.USED_CONTINUATION);
+
+		cont.stack.bind(stack.popN(Arrays.range(in_cont.sig.params, 0, n_binds)));
+		stack.push(Value.Ref(Continuation.new(out_cont, cont.stack)));
+		return null;
+	}
 
 	def matchRtt(obj: Object, rtt: HeapTypeDecl) -> bool {
 		match (obj) {
