@@ -1128,30 +1128,13 @@ class V3Interpreter extends WasmStack {
 			I8X16_SWIZZLE => doSwizzle();
 			// ext:typed-continuation
 			CONT_NEW => {
-				// var cont_index = codeptr.read_uleb32();
-				// var cont_decl = ContDecl.!(frame.func.instance.heaptypes[cont_index]);
-				// var func = Function.!(Value.Ref.!(pop()).val);
-				// if (func == null) trap(TrapReason.NULL_DEREF);
-
-				// var cont = Continuation.new(cont_decl, V3Interpreter.new());
-				// cont.stack.reset(func);
-				// push(Value.Ref(cont));
-
-				Runtime.CONT_NEW(this, frame.func.instance, codeptr.read_uleb32(), V3Interpreter.new);
+				var cont_index = codeptr.read_uleb32();
+				Runtime.CONT_NEW(this, frame.func.instance, cont_index, V3Interpreter.new);
 			}
 			CONT_BIND => {
-				// var in_cont = ContDecl.!(frame.func.instance.heaptypes[codeptr.read_uleb32()]);
-				// var out_cont = ContDecl.!(frame.func.instance.heaptypes[codeptr.read_uleb32()]);
-				// var n_binds = in_cont.sig.params.length - out_cont.sig.params.length;
-				// var cont = Continuation.!(Value.Ref.!(pop()).val);
-				// if (cont == null) trap(TrapReason.NULL_DEREF);
-				// if (cont.used) trap(TrapReason.USED_CONTINUATION);
-				// var new_cont = Continuation.new(out_cont, cont.stack);
-				// new_cont.stack.bind(values.peekn(n_binds));
-				// push(Value.Ref(cont));
-				// values.top -= n_binds;
-
-				Runtime.CONT_BIND(this, frame.func.instance, codeptr.read_uleb32(), codeptr.read_uleb32());
+				var in_cont_index = codeptr.read_uleb32();
+				var out_cont_index = codeptr.read_uleb32();
+				Runtime.CONT_BIND(this, frame.func.instance, in_cont_index, out_cont_index);
 			}
 			RESUME => {
 				var cont_idx = codeptr.read_uleb32();
