@@ -1933,11 +1933,17 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 		// ext:typed-continuation
 		bindHandler(Opcode.CONT_NEW); {
 			genReadUleb32(r_tmp0);
-
 			saveCallerIVars();
 			callRuntime(refRuntimeCall(RT.runtime_CONT_NEW), [r_instance, r_tmp0], true);
 			restoreCallerIVars();
-			
+			endHandler();
+		}
+		bindHandler(Opcode.CONT_BIND); {
+			genReadUleb32(r_tmp0);
+			genReadUleb32(r_tmp1);
+			saveCallerIVars();
+			callRuntime(refRuntimeCall(RT.runtime_CONT_BIND), [r_instance, r_tmp0, r_tmp1], true);
+			restoreCallerIVars();
 			endHandler();
 		}
 		writeDispatchEntry(dispatchTables[0].1, InternalOpcode.PROBE.code, w.atEnd().pos); {
