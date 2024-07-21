@@ -1946,26 +1946,27 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 			restoreCallerIVars();
 			endHandler();
 		}
-		var resumeCont = X86_64Label.new();
+		// var resumeCont = X86_64Label.new();
 		bindHandler(Opcode.RESUME); {
 			var cont_ref = r_tmp0, table_length = r_tmp1;
 
 			computeCurIpForTrap(-1);
 			genSkipLeb(); // skip signature index
 			genReadUleb32(table_length); // read table length
-			asm.imul_r_i(table_length, 2); // table_size = 2 * table_length
+			asm.q.add_r_r(table_length, table_length); // table_size = 2 * table_length
 			asm.q.add_r_r(r_ip, table_length); // skip handler table
 
 			decrementVsp(); // pop cont ref from stack
 			asm.movq_r_m(cont_ref, vsph[0].value);
-			asm.q.cmp_r_i(cont_ref, 0); // null check
-			asm.jc_rel_near(X86_64Conds.NZ, resumeCont); // jump to if non-null
-			
-			// fallthrough: trap on null ref
-			asm.jmp_rel_far(newTrapLabel(TrapReason.NULL_DEREF));
 
-			// label: resume continuation
-			asm.bind(resumeCont);
+			// null check
+			asm.q.cmp_r_i(cont_ref, 0);
+			asm.jc_rel_far(X86_64Conds.Z, newTrapLabel(TrapReason.NULL_DEREF));
+
+			// used check
+			asm.cmpb_m_i(cont_ref.plus(offsets.Continuation_used), 0);
+			asm.jc_rel_far(X86_64Conds.NZ, newTrapLabel(TrapReason.USED_CONTINUATION));
+
 			// TODO[ss]: resume
 
 			endHandler();
