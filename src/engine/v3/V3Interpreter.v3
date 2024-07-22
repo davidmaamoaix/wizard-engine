@@ -1138,6 +1138,9 @@ class V3Interpreter extends WasmStack {
 			}
 			RESUME => {
 				var cont_idx = codeptr.read_uleb32();
+				var handlers = codeptr.read_handlers();
+
+				var sidetable = frame.func.decl.sidetable;
 
 				var cont_type = ContDecl.!(frame.func.instance.heaptypes[cont_idx]);				
 				var cont = Continuation.!(Value.Ref.!(pop()).val);
@@ -1145,7 +1148,8 @@ class V3Interpreter extends WasmStack {
 				if (cont.used) trap(TrapReason.USED_CONTINUATION);
 
 				cont.used = true;
-				cont.stack.bind(values.peekn(cont.stack.getMissingBinds()));
+				cont.stack.bind(values.peekn(sidetable.entries[frame.stp + Sidetables.resume_nargs_pos]));
+				frame.stp += Sidetables.resume_entry_size;
 				
 				prev_resume_pc = frame.pc;
 				state_ = StackState.CALL_CHILD;
@@ -1484,6 +1488,7 @@ class V3Interpreter extends WasmStack {
 	}
 	def onChildTerminate(vals: Array<Value>) {
 		values.pusha(vals);
+		state_ = StackState.RESUMABLE;
 	}
 	// Returns whether the suspend got handled.
 	def onChildSuspend(cont: Continuation, tag: Tag, vals: Array<Value>) -> bool {
