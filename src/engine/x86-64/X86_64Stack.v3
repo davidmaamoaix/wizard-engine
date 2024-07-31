@@ -334,6 +334,29 @@ class X86_64Stack extends WasmStack {
 		vsp += -(valuerep.slot_size);
 		return (vsp + valuerep.tag_size).load<Object>();
 	}
+	def moveToStack(stack: ExecStack, n_vals: int) {
+		// This method assumes `stack` is `X86_64Stack` and performs a memory
+		// copy.
+		var s = X86_64Stack.!(stack);
+		vsp += -(valuerep.slot_size * n_vals);
+
+		// Trace.OUT.put2("MEM ADDR\nn_vals[%d], size[%d]", n_vals, valuerep.slot_size * n_vals).outln();
+
+		// Size of `u64`. The memory is copied in chunks of `sizeof(u64)`.
+		var chunk_size = 8;
+		for (i < n_vals) {
+			for (slot_id < valuerep.slot_size / chunk_size) {
+				var slot_offset = slot_id * chunk_size;
+
+				var to = s.vsp + slot_offset;
+				var from = vsp + (i * valuerep.slot_size) + slot_offset;
+				// TODO: fix this
+				var val = from.load<u64>();
+				to.store(val);
+			}
+			s.vsp += valuerep.slot_size;
+		}
+	}
 	def checkTopTag(tag: byte) -> byte {
 		if (!valuerep.tagged) return tag;
 		var got = peekTag();

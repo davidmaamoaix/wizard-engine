@@ -24,6 +24,8 @@ class ExecStack {
 	def pushd(val: double);
 	def pushz(val: bool);
 	def pushN(vs: Range<Value>);
+
+	def moveToStack(stack: ExecStack, n_vals: int);
 	
 	def trap(r: TrapReason) -> Throwable;
 	def throw(t: Throwable) -> Throwable;

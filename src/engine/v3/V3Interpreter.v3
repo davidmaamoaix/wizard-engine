@@ -1147,9 +1147,12 @@ class V3Interpreter extends WasmStack {
 				if (cont == null) trap(TrapReason.NULL_DEREF);
 				if (cont.used) trap(TrapReason.USED_CONTINUATION);
 
+				Trace.OUT.put1("TEMP %d", sidetable.entries[frame.stp + Sidetables.resume_nargs_pos]).outln();
 				cont.used = true;
 				cont.stack.bind(values.peekn(sidetable.entries[frame.stp + Sidetables.resume_nargs_pos]));
 				frame.stp += Sidetables.resume_entry_size;
+
+				// TODO[ss]: also skip sidetable entries for resume handlers?
 				
 				prev_resume_pc = frame.pc;
 				state_ = StackState.CALL_CHILD;
@@ -1598,6 +1601,12 @@ class V3Interpreter extends WasmStack {
 		for (i < t.length) result[i] = values.elems[sp + i];
 		values.top = sp;
 		return result;
+	}
+	def moveToStack(stack: ExecStack, n_vals: int) {
+		for (i = values.top - n_vals; i < values.top; i++) {
+			stack.push(values.elems[i]);
+		}
+		values.top -= n_vals;
 	}
 	def traceStep() {
 		var OUT = Trace.OUT;

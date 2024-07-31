@@ -65,6 +65,7 @@ class V3Offsets {
 	def CountProbe_count		= int.view(Pointer.atField(cnt.count) - Pointer.atObject(cnt));
 
 	def Continuation_used		= int.view(Pointer.atField(cont.used) - Pointer.atObject(cont));
+	def Continuation_stack		= int.view(Pointer.atField(cont.stack) - Pointer.atObject(cont));
 
 	// Try to future-proof for compressed references someday and use REF_SIZE everywhere
 	def REF_SIZE			= byte.!(Pointer.atElement(mems, 1) - Pointer.atElement(mems, 0));
@@ -73,6 +74,7 @@ class V3Offsets {
 	def STP_pc_delta = 4 * Sidetables.dpc_pos;
 	def STP_valcount = 4 * Sidetables.valcount_pos;
 	def STP_popcount = 4 * Sidetables.popcount_pos;
+	def STP_resume_nargs = 4 * Sidetables.resume_nargs_pos;
 	def STP_stp_delta = 4 * Sidetables.dstp_pos;
 	def STP_entry_size = 4 * Sidetables.br_entry_size;
 	def STP_entry_size_log: u5 = u5.!(2 * Sidetables.br_entry_size_log);

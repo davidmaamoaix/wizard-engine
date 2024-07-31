@@ -1933,6 +1933,9 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 		// ext:typed-continuation
 		bindHandler(Opcode.CONT_NEW); {
 			genReadUleb32(r_tmp0);
+
+			computeCurIpForTrap(-1);
+			computePcFromCurIp();
 			saveCallerIVars();
 			callRuntime(refRuntimeCall(RT.runtime_CONT_NEW), [r_instance, r_tmp0], true);
 			restoreCallerIVars();
@@ -1941,6 +1944,9 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 		bindHandler(Opcode.CONT_BIND); {
 			genReadUleb32(r_tmp0);
 			genReadUleb32(r_tmp1);
+
+			computeCurIpForTrap(-1);
+			computePcFromCurIp();
 			saveCallerIVars();
 			callRuntime(refRuntimeCall(RT.runtime_CONT_BIND), [r_instance, r_tmp0, r_tmp1], true);
 			restoreCallerIVars();
@@ -1948,11 +1954,13 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 		}
 		// var resumeCont = X86_64Label.new();
 		bindHandler(Opcode.RESUME); {
-			var cont_ref = r_tmp0, table_length = r_tmp1;
+			var cont_ref = r_tmp0, table_length = r_tmp1, n_args = r_tmp3;
 
-			computeCurIpForTrap(-1);
 			genSkipLeb(); // skip signature index
 			genReadUleb32(table_length); // read table length
+
+			computeCurIpForTrap(-1);
+			computePcFromCurIp();
 			asm.q.add_r_r(table_length, table_length); // table_size = 2 * table_length
 			asm.q.add_r_r(r_ip, table_length); // skip handler table
 
@@ -1966,8 +1974,19 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 			// used check
 			asm.cmpb_m_i(cont_ref.plus(offsets.Continuation_used), 0);
 			asm.jc_rel_far(X86_64Conds.NZ, newTrapLabel(TrapReason.USED_CONTINUATION));
+			asm.movb_m_i(cont_ref.plus(offsets.Continuation_used), 1);
 
-			// TODO[ss]: resume
+			// read number of bind args from sidetable
+			asm.movd_r_m(n_args, r_stp.plus(0));
+			// increment sidetable
+			asm.q.add_r_i(r_stp, Sidetables.resume_entry_size);
+
+			// extract stack from continuation (old continuation is no longer live)
+			var stack_ref = r_tmp0;
+			asm.q.add_r_i(stack_ref, offsets.Continuation_stack);
+			saveCallerIVars();
+			callRuntime(refRuntimeCall(RT.runtime_moveValuesTo), [r_instance, stack_ref, n_args], false);
+			restoreCallerIVars();
 
 			endHandler();
 		}
