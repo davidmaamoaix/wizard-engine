@@ -1977,7 +1977,7 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 			asm.movb_m_i(cont_ref.plus(offsets.Continuation_used), 1);
 
 			// read number of bind args from sidetable
-			asm.movd_r_m(n_args, r_stp.plus(0));
+			asm.movd_r_m(n_args, r_stp.plus(offsets.STP_resume_nargs));
 			// increment sidetable
 			asm.q.add_r_i(r_stp, Sidetables.resume_entry_size);
 
@@ -1987,6 +1987,8 @@ class X86_64InterpreterGen(ic: X86_64InterpreterCode, w: DataWriter) {
 			saveCallerIVars();
 			callRuntime(refRuntimeCall(RT.runtime_moveValuesTo), [r_instance, stack_ref, n_args], false);
 			restoreCallerIVars();
+
+
 
 			endHandler();
 		}

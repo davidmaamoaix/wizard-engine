@@ -1147,7 +1147,6 @@ class V3Interpreter extends WasmStack {
 				if (cont == null) trap(TrapReason.NULL_DEREF);
 				if (cont.used) trap(TrapReason.USED_CONTINUATION);
 
-				Trace.OUT.put1("TEMP %d", sidetable.entries[frame.stp + Sidetables.resume_nargs_pos]).outln();
 				cont.used = true;
 				cont.stack.bind(values.peekn(sidetable.entries[frame.stp + Sidetables.resume_nargs_pos]));
 				frame.stp += Sidetables.resume_entry_size;
@@ -1175,6 +1174,8 @@ class V3Interpreter extends WasmStack {
 				var throwable = Exception.new(exn_tag, vals, null);
 
 				cont.used = true;
+				frame.stp += Sidetables.resume_entry_size;
+				
 				var res = cont.stack.throw(throwable);
 				prev_resume_pc = frame.pc;
 				state_ = StackState.CALL_CHILD;

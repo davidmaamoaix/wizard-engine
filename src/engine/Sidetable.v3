@@ -45,6 +45,7 @@ component Sidetables {
 	def popcount_pos = 2;
 	def dstp_pos = 3;
 	def resume_nargs_pos = 0;
+	def resume_hsize_pos = 1;
 
 	def NO_SIDETABLE = Sidetable([]);
 
@@ -60,11 +61,11 @@ component Sidetables {
 		 .put(0)
 		 .put(sidetable_pos);
 	}
-	def putResumeEntry(v: Vector<int>, nargs: int) {
-		v.put(nargs)	// number of arguments to be pushed
-		 .put(0)		// reserved
-		 .put(0)		// reserved
-		 .put(0);		// reserved
+	def putResumeEntry(v: Vector<int>, nargs: int, n_handlers: int) {
+		v.put(nargs)		// number of arguments to be pushed
+		 .put(n_handlers)	// number of handlers (for sidetable lookup)
+		 .put(0)			// reserved
+		 .put(0);			// reserved
 	}
 }
 

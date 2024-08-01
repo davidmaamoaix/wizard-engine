@@ -12,6 +12,7 @@ class X86_64Stack extends WasmStack {
 	var rsp: Pointer;
 	var func: Function;
 	var parent_rsp_ptr: Pointer;
+	var curr_resume_handler: int;
 	private var params_arity = -1;
 	private var return_results: Array<ValueType>;
 	private var state_: StackState;

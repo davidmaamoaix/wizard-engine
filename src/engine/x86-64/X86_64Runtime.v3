@@ -148,9 +148,6 @@ component X86_64Runtime {
 	def runtime_moveValuesTo(instance: Instance, to_stack: Pointer, n_vals: int) {
 		Runtime.moveValuesTo(curStack, to_stack.load<X86_64Stack>(), n_vals);
 	}
-	def runtime_BREAK() {
-
-	}
 
 	//=====================================================================
 	// GC proposal callbacks
